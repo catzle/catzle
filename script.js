@@ -11,7 +11,7 @@ document.getElementById("submissionForm").addEventListener("submit", function(ev
     return;
   }
 
-  let url = "https://script.google.com/macros/s/AKfycbxS-12yflZFH1APVwWrhlKsu_TWQE9tcwry_uvPtpA512ou3UJiIKSz2JsmuDZ4EBE_/exec"; // Replace this with your actual Web App URL
+  let url = "https://script.google.com/macros/s/AKfycbweYFyDj3_fRGWeEDZKORop_VIDtG8Te_evrxIqQ6HWx9nWRFn4mZOMyKKo26uMCGKh/exec"; // Replace this with your actual Web App URL
 
   fetch(url, {
     method: "POST",

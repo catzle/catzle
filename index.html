@@ -5,8 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Text Submission Form</title>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Century+Gothic&display=swap');
+  
   body {
-    font-family: Arial, sans-serif;
+    font-family: 'Century Gothic', sans-serif;
     background-color: #f4f4f4;
     display: flex;
     justify-content: center;
@@ -25,6 +27,7 @@
   }
   h2 {
     color: #333;
+    font-weight: bold;
   }
   textarea {
     width: calc(100% - 20px);
@@ -36,6 +39,7 @@
     font-size: 16px;
     display: block;
     margin: 0 auto;
+    font-family: 'Century Gothic', sans-serif;
   }
   button {
     background-color: #007bff;
@@ -47,14 +51,27 @@
     cursor: pointer;
     width: 100%;
     margin-top: 10px;
+    font-family: 'Century Gothic', sans-serif;
   }
   button:hover {
     background-color: #0056b3;
+  }
+  #submittedText {
+    margin-top: 15px;
+    padding: 10px;
+    background: #e9ecef;
+    border-radius: 8px;
+    font-size: 16px;
+    color: #333;
+    display: none;
   }
   #message {
     margin-top: 10px;
     color: green;
     font-weight: bold;
+  }
+  .hidden {
+    display: none;
   }
 </style>
 </head>
@@ -67,7 +84,34 @@
       <button type="submit">Submit</button>
     </form>
     <p id="message"></p>
+    <div id="submittedText"></div>
+    <button id="writeAgain" class="hidden">Write Again</button>
   </div>
-  <script src="script.js"></script>
+  <script>
+    document.getElementById("submissionForm").addEventListener("submit", function(event) {
+      event.preventDefault();
+      
+      let textValue = document.getElementById("text").value;
+      let submittedTextDiv = document.getElementById("submittedText");
+      let messagePara = document.getElementById("message");
+      let writeAgainBtn = document.getElementById("writeAgain");
+
+      if (textValue.trim() !== "") {
+        submittedTextDiv.innerHTML = "<strong>Submitted Text:</strong> " + textValue;
+        submittedTextDiv.style.display = "block";
+        messagePara.textContent = "Submission successful!";
+        document.getElementById("text").value = "";
+        writeAgainBtn.classList.remove("hidden");
+      } else {
+        messagePara.textContent = "Please enter some text.";
+      }
+    });
+
+    document.getElementById("writeAgain").addEventListener("click", function() {
+      document.getElementById("submittedText").style.display = "none";
+      document.getElementById("message").textContent = "";
+      this.classList.add("hidden");
+    });
+  </script>
 </body>
 </html>

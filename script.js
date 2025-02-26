@@ -2,7 +2,7 @@ document.getElementById("submissionForm").addEventListener("submit", function(ev
   event.preventDefault();
   
   const textValue = document.getElementById("text").value;
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwDDaBwB8INkECdxCbhVZuTvcCslE-41pMpVth5qhDJF6iOsuUeAuO9lseYgeR3eOh4fA/exec";
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyJKL4BmkQROPegDcmihBUmV9dRFPODqLZIhx4FU3W_fUs-_zBYIfL-UqIJqyftqaxqfA/exec";
 
   if (textValue.trim() !== "") {
     fetch(SCRIPT_URL, {

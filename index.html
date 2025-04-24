@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Interactive Circuit Builder</title>
+    <title>Advanced Circuit Builder</title>
     <style>
         body {
             text-align: center;
@@ -12,21 +12,39 @@
             border: 2px solid #000;
             margin-top: 20px;
         }
+        .controls, .toolbox {
+            margin: 10px;
+        }
+        .controls button, .toolbox button {
+            margin: 0 5px;
+            padding: 6px 12px;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
-    <h1>Drag, Rotate, and Connect Circuit Components</h1>
-    <canvas id="myCanvas" width="800" height="600"></canvas>
-
+    <h1>Advanced Circuit Builder</h1>
+    <div class="controls">
+        <button onclick="rotateSelected()">Rotate</button>
+        <button onclick="deleteSelected()">Delete</button>
+        <button onclick="saveLayout()">Save</button>
+        <button onclick="loadLayout()">Load</button>
+    </div>
+    <canvas id="myCanvas" width="900" height="600"></canvas>
     <script>
         const canvas = document.getElementById('myCanvas');
         const ctx = canvas.getContext('2d');
 
         const shapes = [
             { type: 'battery_main', x: 100, y: 300, size: 50, angle: 0 },
-            { type: 'wire_spawn', x: 700, y: 100, size: 20 },
-            { type: 'wire_neg_spawn', x: 700, y: 150, size: 20 },
-            { type: 'resistor_spawn', x: 700, y: 200, size: 60 }
+            { type: 'wire_spawn', x: 800, y: 100, size: 20 },
+            { type: 'wire_neg_spawn', x: 800, y: 150, size: 20 },
+            { type: 'resistor_spawn', x: 800, y: 200, size: 60 }
+        ];
+
+        const TOOLBOX_SPAWNS = [
+            { type: 'led_spawn', x: 800, y: 250 },
+            { type: 'switch_spawn', x: 800, y: 300 }
         ];
 
         let dragShape = null;
@@ -42,8 +60,8 @@
 
         function drawShapes() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            shapes.forEach(shape => {
-                if (['wire_pos', 'wire_neg', 'resistor', 'battery_main'].includes(shape.type)) {
+            [...shapes, ...TOOLBOX_SPAWNS].forEach(shape => {
+                if (['wire_pos', 'wire_neg', 'resistor', 'battery_main', 'led', 'switch'].includes(shape.type)) {
                     drawRotated(shape, () => drawComponent(shape));
                 } else {
                     drawComponent(shape);
@@ -54,12 +72,15 @@
         function drawComponent(shape) {
             ctx.beginPath();
             if (shape.type === 'battery_main') {
+                ctx.save();
+                ctx.translate(shape.x, shape.y);
                 ctx.fillStyle = '#FFD700';
                 ctx.fillRect(-10, -shape.size / 2, 20, shape.size);
                 ctx.fillStyle = 'red';
                 ctx.fillRect(-2, -shape.size / 2 - 10, 4, 6); // + terminal
                 ctx.fillStyle = 'black';
                 ctx.fillRect(-2, shape.size / 2 + 4, 4, 6); // - terminal
+                ctx.restore();
             } else if (shape.type === 'wire_pos') {
                 ctx.strokeStyle = 'red';
                 ctx.lineWidth = 4;
@@ -83,30 +104,28 @@
                 ctx.lineTo(shape.size / 2, 0);
                 ctx.lineTo(shape.size / 2 + 10, 0);
                 ctx.stroke();
-            } else if (shape.type === 'wire_spawn') {
-                ctx.fillStyle = 'red';
+            } else if (shape.type.endsWith('_spawn')) {
+                ctx.fillStyle = shape.type === 'wire_spawn' ? 'red' : shape.type === 'wire_neg_spawn' ? 'black' : '#663399';
                 ctx.fillRect(shape.x - 15, shape.y - 15, 30, 30);
                 ctx.fillStyle = '#fff';
                 ctx.font = '14px Arial';
-                ctx.fillText('Wire+', shape.x - 14, shape.y + 5);
-            } else if (shape.type === 'wire_neg_spawn') {
-                ctx.fillStyle = 'black';
-                ctx.fillRect(shape.x - 15, shape.y - 15, 30, 30);
-                ctx.fillStyle = '#fff';
-                ctx.font = '14px Arial';
-                ctx.fillText('Wire-', shape.x - 14, shape.y + 5);
-            } else if (shape.type === 'resistor_spawn') {
-                ctx.fillStyle = '#663399';
-                ctx.fillRect(shape.x - 15, shape.y - 15, 30, 30);
-                ctx.fillStyle = '#fff';
-                ctx.font = '14px Arial';
-                ctx.fillText('Res', shape.x - 10, shape.y + 5);
+                ctx.fillText(shape.type.split('_')[0], shape.x - 14, shape.y + 5);
+            } else if (shape.type === 'led') {
+                ctx.fillStyle = 'green';
+                ctx.beginPath();
+                ctx.arc(0, 0, 10, 0, Math.PI * 2);
+                ctx.fill();
+            } else if (shape.type === 'switch') {
+                ctx.strokeStyle = 'blue';
+                ctx.lineWidth = 2;
+                ctx.moveTo(-10, 0);
+                ctx.lineTo(10, 0);
+                ctx.stroke();
             }
         }
 
-        function isNear(shape1, shape2) {
-            const dx = shape1.x - shape2.x;
-            const dy = shape1.y - shape2.y;
+        function isNear(a, b) {
+            const dx = a.x - b.x, dy = a.y - b.y;
             return Math.sqrt(dx * dx + dy * dy) < 50;
         }
 
@@ -133,18 +152,11 @@
         canvas.addEventListener('mousedown', e => {
             const mouseX = e.offsetX;
             const mouseY = e.offsetY;
-            for (let shape of shapes) {
+            for (let shape of [...shapes, ...TOOLBOX_SPAWNS]) {
                 if (Math.abs(mouseX - shape.x) < 20 && Math.abs(mouseY - shape.y) < 20) {
-                    if (shape.type === 'wire_spawn') {
-                        shapes.push({ type: 'wire_pos', x: shape.x + 40, y: shape.y, size: 30, angle: 0 });
-                        render();
-                        return;
-                    } else if (shape.type === 'wire_neg_spawn') {
-                        shapes.push({ type: 'wire_neg', x: shape.x + 40, y: shape.y, size: 30, angle: 0 });
-                        render();
-                        return;
-                    } else if (shape.type === 'resistor_spawn') {
-                        shapes.push({ type: 'resistor', x: shape.x + 40, y: shape.y, size: 60, angle: 0 });
+                    if (shape.type.endsWith('_spawn')) {
+                        let newType = shape.type.replace('_spawn', '');
+                        shapes.push({ type: newType, x: shape.x + 40, y: shape.y, size: 30, angle: 0 });
                         render();
                         return;
                     } else {
@@ -169,11 +181,41 @@
             dragShape = null;
         });
 
-        window.addEventListener('keydown', e => {
-            if (e.key === 'r' && dragShape && ['wire_pos', 'wire_neg', 'resistor'].includes(dragShape.type)) {
+        function rotateSelected() {
+            if (dragShape && dragShape.angle !== undefined) {
                 dragShape.angle = (dragShape.angle + 90) % 360;
                 render();
             }
+        }
+
+        function deleteSelected() {
+            if (dragShape) {
+                const index = shapes.indexOf(dragShape);
+                if (index !== -1) {
+                    shapes.splice(index, 1);
+                    dragShape = null;
+                    render();
+                }
+            }
+        }
+
+        function saveLayout() {
+            localStorage.setItem('circuitLayout', JSON.stringify(shapes));
+            alert('Layout saved!');
+        }
+
+        function loadLayout() {
+            const data = localStorage.getItem('circuitLayout');
+            if (data) {
+                shapes.length = 0;
+                JSON.parse(data).forEach(s => shapes.push(s));
+                render();
+            }
+        }
+
+        window.addEventListener('keydown', e => {
+            if (e.key === 'r') rotateSelected();
+            if (e.key === 'Delete') deleteSelected();
         });
 
         render();

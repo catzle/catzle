@@ -15,7 +15,7 @@
     </style>
 </head>
 <body>
-    <h1>Drag and Connect Circuit Components</h1>
+    <h1>Drag, Rotate, and Connect Circuit Components</h1>
     <canvas id="myCanvas" width="800" height="600"></canvas>
 
     <script>
@@ -23,54 +23,85 @@
         const ctx = canvas.getContext('2d');
 
         const shapes = [
-            { type: 'battery_main', x: 100, y: 300, size: 50 },
+            { type: 'battery_main', x: 100, y: 300, size: 50, angle: 0 },
             { type: 'wire_spawn', x: 700, y: 100, size: 20 },
+            { type: 'wire_neg_spawn', x: 700, y: 150, size: 20 },
             { type: 'resistor_spawn', x: 700, y: 200, size: 60 }
         ];
 
         let dragShape = null;
         let offsetX = 0, offsetY = 0;
 
+        function drawRotated(shape, drawFunc) {
+            ctx.save();
+            ctx.translate(shape.x, shape.y);
+            ctx.rotate((shape.angle || 0) * Math.PI / 180);
+            drawFunc();
+            ctx.restore();
+        }
+
         function drawShapes() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             shapes.forEach(shape => {
-                ctx.beginPath();
-                if (shape.type === 'battery_main') {
-                    // Battery with + and -
-                    ctx.fillStyle = '#FFD700';
-                    ctx.fillRect(shape.x - 10, shape.y - shape.size / 2, 20, shape.size);
-                    ctx.fillStyle = 'red';
-                    ctx.fillRect(shape.x - 5, shape.y - shape.size / 2 - 10, 10, 5); // + terminal
-                    ctx.fillStyle = 'black';
-                    ctx.fillRect(shape.x - 5, shape.y + shape.size / 2 + 5, 10, 5); // - terminal
-                } else if (shape.type === 'wire_pos' || shape.type === 'wire_neg') {
-                    ctx.strokeStyle = shape.type === 'wire_pos' ? 'red' : 'black';
-                    ctx.lineWidth = 4;
-                    ctx.moveTo(shape.x, shape.y);
-                    ctx.lineTo(shape.x, shape.y + shape.size);
-                } else if (shape.type === 'resistor') {
-                    ctx.strokeStyle = '#663399';
-                    ctx.lineWidth = 2;
-                    ctx.moveTo(shape.x - shape.size / 2 - 10, shape.y);
-                    ctx.lineTo(shape.x - shape.size / 2, shape.y);
-                    for (let i = 0; i < 4; i++) {
-                        ctx.lineTo(shape.x - shape.size / 2 + i * (shape.size / 4), shape.y + (i % 2 === 0 ? -10 : 10));
-                    }
-                    ctx.lineTo(shape.x + shape.size / 2, shape.y);
-                    ctx.lineTo(shape.x + shape.size / 2 + 10, shape.y);
-                } else if (shape.type === 'wire_spawn') {
-                    ctx.fillStyle = 'red';
-                    ctx.fillRect(shape.x - 10, shape.y - 10, 20, 20);
-                    ctx.fillStyle = '#fff';
-                    ctx.fillText('+', shape.x - 4, shape.y + 4);
-                } else if (shape.type === 'resistor_spawn') {
-                    ctx.fillStyle = '#663399';
-                    ctx.fillRect(shape.x - 15, shape.y - 10, 30, 20);
-                    ctx.fillStyle = '#fff';
-                    ctx.fillText('R', shape.x - 4, shape.y + 5);
+                if (['wire_pos', 'wire_neg', 'resistor', 'battery_main'].includes(shape.type)) {
+                    drawRotated(shape, () => drawComponent(shape));
+                } else {
+                    drawComponent(shape);
                 }
-                ctx.stroke();
             });
+        }
+
+        function drawComponent(shape) {
+            ctx.beginPath();
+            if (shape.type === 'battery_main') {
+                ctx.fillStyle = '#FFD700';
+                ctx.fillRect(-10, -shape.size / 2, 20, shape.size);
+                ctx.fillStyle = 'red';
+                ctx.fillRect(-2, -shape.size / 2 - 10, 4, 6); // + terminal
+                ctx.fillStyle = 'black';
+                ctx.fillRect(-2, shape.size / 2 + 4, 4, 6); // - terminal
+            } else if (shape.type === 'wire_pos') {
+                ctx.strokeStyle = 'red';
+                ctx.lineWidth = 4;
+                ctx.moveTo(0, 0);
+                ctx.lineTo(0, shape.size);
+                ctx.stroke();
+            } else if (shape.type === 'wire_neg') {
+                ctx.strokeStyle = 'black';
+                ctx.lineWidth = 4;
+                ctx.moveTo(0, 0);
+                ctx.lineTo(0, shape.size);
+                ctx.stroke();
+            } else if (shape.type === 'resistor') {
+                ctx.strokeStyle = '#663399';
+                ctx.lineWidth = 2;
+                ctx.moveTo(-shape.size / 2 - 10, 0);
+                ctx.lineTo(-shape.size / 2, 0);
+                for (let i = 0; i < 4; i++) {
+                    ctx.lineTo(-shape.size / 2 + i * (shape.size / 4), (i % 2 === 0 ? -10 : 10));
+                }
+                ctx.lineTo(shape.size / 2, 0);
+                ctx.lineTo(shape.size / 2 + 10, 0);
+                ctx.stroke();
+            } else if (shape.type === 'wire_spawn') {
+                ctx.fillStyle = 'red';
+                ctx.fillRect(shape.x - 15, shape.y - 15, 30, 30);
+                ctx.fillStyle = '#fff';
+                ctx.font = '14px Arial';
+                ctx.fillText('Wire+', shape.x - 14, shape.y + 5);
+            } else if (shape.type === 'wire_neg_spawn') {
+                ctx.fillStyle = 'black';
+                ctx.fillRect(shape.x - 15, shape.y - 15, 30, 30);
+                ctx.fillStyle = '#fff';
+                ctx.font = '14px Arial';
+                ctx.fillText('Wire-', shape.x - 14, shape.y + 5);
+            } else if (shape.type === 'resistor_spawn') {
+                ctx.fillStyle = '#663399';
+                ctx.fillRect(shape.x - 15, shape.y - 15, 30, 30);
+                ctx.fillStyle = '#fff';
+                ctx.font = '14px Arial';
+                ctx.fillText('Res', shape.x - 10, shape.y + 5);
+            }
         }
 
         function isNear(shape1, shape2) {
@@ -103,25 +134,31 @@
             const mouseX = e.offsetX;
             const mouseY = e.offsetY;
             for (let shape of shapes) {
-                if (Math.abs(mouseX - shape.x) < 30 && Math.abs(mouseY - shape.y) < 30) {
-                    dragShape = shape;
-                    offsetX = mouseX - shape.x;
-                    offsetY = mouseY - shape.y;
-
-                    // Clone from spawners
+                if (Math.abs(mouseX - shape.x) < 20 && Math.abs(mouseY - shape.y) < 20) {
                     if (shape.type === 'wire_spawn') {
-                        shapes.push({ type: 'wire_pos', x: shape.x + 30, y: shape.y, size: 30 });
+                        shapes.push({ type: 'wire_pos', x: shape.x + 40, y: shape.y, size: 30, angle: 0 });
+                        render();
+                        return;
+                    } else if (shape.type === 'wire_neg_spawn') {
+                        shapes.push({ type: 'wire_neg', x: shape.x + 40, y: shape.y, size: 30, angle: 0 });
+                        render();
+                        return;
                     } else if (shape.type === 'resistor_spawn') {
-                        shapes.push({ type: 'resistor', x: shape.x + 30, y: shape.y, size: 60 });
+                        shapes.push({ type: 'resistor', x: shape.x + 40, y: shape.y, size: 60, angle: 0 });
+                        render();
+                        return;
+                    } else {
+                        dragShape = shape;
+                        offsetX = mouseX - shape.x;
+                        offsetY = mouseY - shape.y;
+                        break;
                     }
-
-                    break;
                 }
             }
         });
 
         canvas.addEventListener('mousemove', e => {
-            if (dragShape && dragShape.type !== 'wire_spawn' && dragShape.type !== 'resistor_spawn') {
+            if (dragShape) {
                 dragShape.x = e.offsetX - offsetX;
                 dragShape.y = e.offsetY - offsetY;
                 render();
@@ -130,6 +167,13 @@
 
         canvas.addEventListener('mouseup', () => {
             dragShape = null;
+        });
+
+        window.addEventListener('keydown', e => {
+            if (e.key === 'r' && dragShape && ['wire_pos', 'wire_neg', 'resistor'].includes(dragShape.type)) {
+                dragShape.angle = (dragShape.angle + 90) % 360;
+                render();
+            }
         });
 
         render();

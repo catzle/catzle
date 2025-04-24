@@ -1,117 +1,97 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Text Submission Form</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Century+Gothic&display=swap');
-  
-  body {
-    font-family: 'Century Gothic', sans-serif;
-    background-color: #f4f4f4;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    margin: 0;
-  }
-  .container {
-    background: white;
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-    width: 90%;
-    max-width: 400px;
-    text-align: center;
-  }
-  h2 {
-    color: #333;
-    font-weight: bold;
-  }
-  textarea {
-    width: calc(100% - 20px);
-    height: 120px;
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-    resize: none;
-    font-size: 16px;
-    display: block;
-    margin: 0 auto;
-    font-family: 'Century Gothic', sans-serif;
-  }
-  button {
-    background-color: #007bff;
-    color: white;
-    border: none;
-    padding: 12px 20px;
-    border-radius: 25px;
-    font-size: 16px;
-    cursor: pointer;
-    width: 100%;
-    margin-top: 10px;
-    font-family: 'Century Gothic', sans-serif;
-  }
-  button:hover {
-    background-color: #0056b3;
-  }
-  #submittedText {
-    margin-top: 15px;
-    padding: 10px;
-    background: #e9ecef;
-    border-radius: 8px;
-    font-size: 16px;
-    color: #333;
-    display: none;
-  }
-  #message {
-    margin-top: 10px;
-    color: green;
-    font-weight: bold;
-  }
-  .hidden {
-    display: none;
-  }
-</style>
+    <meta charset="UTF-8">
+    <title>Drag Shapes to Form Circuit</title>
+    <style>
+        body {
+            text-align: center;
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            border: 2px solid #000;
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <h2>Submit Text</h2>
-    <form id="submissionForm">
-      <label for="text">Write something:</label><br>
-      <textarea id="text" name="text" required></textarea><br>
-      <button type="submit">Submit</button>
-    </form>
-    <p id="message"></p>
-    <div id="submittedText"></div>
-    <button id="writeAgain" class="hidden">Write Again</button>
-  </div>
-  <script>
-    document.getElementById("submissionForm").addEventListener("submit", function(event) {
-      event.preventDefault();
-      
-      let textValue = document.getElementById("text").value;
-      let submittedTextDiv = document.getElementById("submittedText");
-      let messagePara = document.getElementById("message");
-      let writeAgainBtn = document.getElementById("writeAgain");
+    <h1>Drag the Shapes to the Center</h1>
+    <canvas id="myCanvas" width="800" height="600"></canvas>
 
-      if (textValue.trim() !== "") {
-        submittedTextDiv.innerHTML = "<strong>Submitted Text:</strong> " + textValue;
-        submittedTextDiv.style.display = "block";
-        messagePara.textContent = "Submission successful!";
-        document.getElementById("text").value = "";
-        writeAgainBtn.classList.remove("hidden");
-      } else {
-        messagePara.textContent = "Please enter some text.";
-      }
-    });
+    <script>
+        const canvas = document.getElementById('myCanvas');
+        const ctx = canvas.getContext('2d');
 
-    document.getElementById("writeAgain").addEventListener("click", function() {
-      document.getElementById("submittedText").style.display = "none";
-      document.getElementById("message").textContent = "";
-      this.classList.add("hidden");
-    });
-  </script>
+        const shapes = [
+            { type: 'circle', x: 100, y: 100, size: 30 },
+            { type: 'square', x: 700, y: 100, size: 40 },
+            { type: 'triangle', x: 100, y: 500, size: 50 },
+            { type: 'circle', x: 700, y: 500, size: 25 },
+            { type: 'square', x: 400, y: 50, size: 35 }
+        ];
+
+        let dragShape = null;
+        let offsetX = 0, offsetY = 0;
+
+        function drawShapes() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            shapes.forEach(shape => {
+                ctx.beginPath();
+                if (shape.type === 'circle') {
+                    ctx.arc(shape.x, shape.y, shape.size, 0, 2 * Math.PI);
+                } else if (shape.type === 'square') {
+                    ctx.rect(shape.x - shape.size / 2, shape.y - shape.size / 2, shape.size, shape.size);
+                } else if (shape.type === 'triangle') {
+                    ctx.moveTo(shape.x, shape.y - shape.size / 2);
+                    ctx.lineTo(shape.x + shape.size / 2, shape.y + shape.size / 2);
+                    ctx.lineTo(shape.x - shape.size / 2, shape.y + shape.size / 2);
+                    ctx.closePath();
+                }
+                ctx.fillStyle = '#66ccff';
+                ctx.fill();
+                ctx.strokeStyle = '#000';
+                ctx.stroke();
+            });
+        }
+
+        function isInside(shape, x, y) {
+            if (shape.type === 'circle') {
+                const dx = shape.x - x;
+                const dy = shape.y - y;
+                return dx * dx + dy * dy <= shape.size * shape.size;
+            } else {
+                return (x >= shape.x - shape.size / 2 && x <= shape.x + shape.size / 2 &&
+                        y >= shape.y - shape.size / 2 && y <= shape.y + shape.size / 2);
+            }
+        }
+
+        canvas.addEventListener('mousedown', e => {
+            const mouseX = e.offsetX;
+            const mouseY = e.offsetY;
+
+            for (let shape of shapes) {
+                if (isInside(shape, mouseX, mouseY)) {
+                    dragShape = shape;
+                    offsetX = mouseX - shape.x;
+                    offsetY = mouseY - shape.y;
+                    break;
+                }
+            }
+        });
+
+        canvas.addEventListener('mousemove', e => {
+            if (dragShape) {
+                dragShape.x = e.offsetX - offsetX;
+                dragShape.y = e.offsetY - offsetY;
+                drawShapes();
+            }
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            dragShape = null;
+        });
+
+        drawShapes();
+    </script>
 </body>
 </html>

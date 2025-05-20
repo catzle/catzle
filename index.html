@@ -1,224 +1,300 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Advanced Circuit Builder</title>
+    <title>Graphical Circuit Simulator</title>
     <style>
         body {
-            text-align: center;
             font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
         }
-        canvas {
-            border: 2px solid #000;
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .components-panel {
+            width: 200px;
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .component {
+            padding: 10px;
+            margin: 10px 0;
+            background-color: #e9f7ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 4px;
+            cursor: grab;
+            text-align: center;
+        }
+        .workspace {
+            flex: 1;
+            min-height: 500px;
+            background-color: white;
+            border: 1px dashed #ccc;
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .results-panel {
+            width: 100%;
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
             margin-top: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
-        .controls, .toolbox {
-            margin: 10px;
+        .circuit-element {
+            position: absolute;
+            cursor: move;
         }
-        .controls button, .toolbox button {
-            margin: 0 5px;
-            padding: 6px 12px;
-            font-size: 14px;
+        .battery {
+            width: 60px;
+            height: 60px;
+        }
+        .resistor {
+            width: 80px;
+            height: 30px;
+        }
+        .wire {
+            height: 4px;
+            background-color: black;
+        }
+        .value-input {
+            position: absolute;
+            width: 60px;
+            font-size: 12px;
+            text-align: center;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .connection-point {
+            width: 8px;
+            height: 8px;
+            background-color: red;
+            border-radius: 50%;
+            position: absolute;
+            z-index: 10;
         }
     </style>
 </head>
 <body>
-    <h1>Advanced Circuit Builder</h1>
-    <div class="controls">
-        <button onclick="rotateSelected()">Rotate</button>
-        <button onclick="deleteSelected()">Delete</button>
-        <button onclick="saveLayout()">Save</button>
-        <button onclick="loadLayout()">Load</button>
+    <div class="container">
+        <div class="components-panel">
+            <h2>Components</h2>
+            <div class="component" draggable="true" data-type="battery">
+                <svg width="50" height="30" viewBox="0 0 50 30">
+                    <line x1="5" y1="15" x2="15" y2="15" stroke="black" stroke-width="2"/>
+                    <rect x="15" y="5" width="20" height="20" fill="none" stroke="black" stroke-width="2"/>
+                    <line x1="20" y1="10" x2="20" y2="20" stroke="black" stroke-width="2"/>
+                    <line x1="30" y1="10" x2="30" y2="20" stroke="black" stroke-width="2"/>
+                    <line x1="35" y1="15" x2="45" y2="15" stroke="black" stroke-width="2"/>
+                </svg>
+                <div>Battery</div>
+            </div>
+            <div class="component" draggable="true" data-type="resistor">
+                <svg width="50" height="30" viewBox="0 0 50 30">
+                    <line x1="5" y1="15" x2="15" y2="15" stroke="black" stroke-width="2"/>
+                    <rect x="15" y="5" width="20" height="20" fill="white" stroke="black" stroke-width="2"/>
+                    <line x1="35" y1="15" x2="45" y2="15" stroke="black" stroke-width="2"/>
+                </svg>
+                <div>Resistor</div>
+            </div>
+            <div class="component" draggable="true" data-type="wire-h">
+                <svg width="50" height="30" viewBox="0 0 50 30">
+                    <line x1="5" y1="15" x2="45" y2="15" stroke="black" stroke-width="2"/>
+                </svg>
+                <div>Horizontal Wire</div>
+            </div>
+            <div class="component" draggable="true" data-type="wire-v">
+                <svg width="30" height="50" viewBox="0 0 30 50">
+                    <line x1="15" y1="5" x2="15" y2="45" stroke="black" stroke-width="2"/>
+                </svg>
+                <div>Vertical Wire</div>
+            </div>
+        </div>
+        
+        <div class="workspace" id="workspace">
+            <div id="connection-points" style="display:none;"></div>
+        </div>
+        
+        <div class="results-panel">
+            <h2>Circuit Analysis</h2>
+            <button id="calculate-btn">Calculate Circuit</button>
+            <div id="results">
+                <p>Place components and click calculate to see results.</p>
+            </div>
+        </div>
     </div>
-    <canvas id="myCanvas" width="900" height="600"></canvas>
+
     <script>
-        const canvas = document.getElementById('myCanvas');
-        const ctx = canvas.getContext('2d');
-
-        const shapes = [
-            { type: 'battery_main', x: 100, y: 300, size: 50, angle: 0 },
-            { type: 'wire_spawn', x: 800, y: 100, size: 20 },
-            { type: 'wire_neg_spawn', x: 800, y: 150, size: 20 },
-            { type: 'resistor_spawn', x: 800, y: 200, size: 60 }
-        ];
-
-        const TOOLBOX_SPAWNS = [
-            { type: 'led_spawn', x: 800, y: 250 },
-            { type: 'switch_spawn', x: 800, y: 300 }
-        ];
-
-        let dragShape = null;
-        let offsetX = 0, offsetY = 0;
-
-        function drawRotated(shape, drawFunc) {
-            ctx.save();
-            ctx.translate(shape.x, shape.y);
-            ctx.rotate((shape.angle || 0) * Math.PI / 180);
-            drawFunc();
-            ctx.restore();
-        }
-
-        function drawShapes() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            [...shapes, ...TOOLBOX_SPAWNS].forEach(shape => {
-                if (['wire_pos', 'wire_neg', 'resistor', 'battery_main', 'led', 'switch'].includes(shape.type)) {
-                    drawRotated(shape, () => drawComponent(shape));
-                } else {
-                    drawComponent(shape);
+        document.addEventListener('DOMContentLoaded', function() {
+            const workspace = document.getElementById('workspace');
+            let draggedElement = null;
+            let offsetX, offsetY;
+            let componentCount = 0;
+            
+            // Make components draggable
+            document.querySelectorAll('.component').forEach(comp => {
+                comp.addEventListener('dragstart', function(e) {
+                    draggedElement = this.cloneNode(true);
+                    draggedElement.classList.add('circuit-element');
+                    draggedElement.dataset.id = 'comp-' + (++componentCount);
+                    draggedElement.dataset.type = this.dataset.type;
+                    
+                    // Set different styles based on component type
+                    if (this.dataset.type === 'battery') {
+                        draggedElement.classList.add('battery');
+                        draggedElement.innerHTML = `
+                            <svg width="60" height="60" viewBox="0 0 50 30">
+                                <line x1="5" y1="15" x2="15" y2="15" stroke="black" stroke-width="2"/>
+                                <rect x="15" y="5" width="20" height="20" fill="none" stroke="black" stroke-width="2"/>
+                                <line x1="20" y1="10" x2="20" y2="20" stroke="black" stroke-width="2"/>
+                                <line x1="30" y1="10" x2="30" y2="20" stroke="black" stroke-width="2"/>
+                                <line x1="35" y1="15" x2="45" y2="15" stroke="black" stroke-width="2"/>
+                            </svg>
+                            <input type="number" class="value-input" placeholder="V" 
+                                   style="top: 30px; left: 15px;" data-param="voltage">
+                        `;
+                    } 
+                    else if (this.dataset.type === 'resistor') {
+                        draggedElement.classList.add('resistor');
+                        draggedElement.innerHTML = `
+                            <svg width="80" height="30" viewBox="0 0 50 30">
+                                <line x1="5" y1="15" x2="15" y2="15" stroke="black" stroke-width="2"/>
+                                <rect x="15" y="5" width="20" height="20" fill="white" stroke="black" stroke-width="2"/>
+                                <line x1="35" y1="15" x2="45" y2="15" stroke="black" stroke-width="2"/>
+                            </svg>
+                            <input type="number" class="value-input" placeholder="Ω" 
+                                   style="top: 35px; left: 10px;" data-param="resistance">
+                        `;
+                    }
+                    else if (this.dataset.type === 'wire-h') {
+                        draggedElement.classList.add('wire');
+                        draggedElement.style.width = '100px';
+                        draggedElement.style.height = '4px';
+                    }
+                    else if (this.dataset.type === 'wire-v') {
+                        draggedElement.classList.add('wire');
+                        draggedElement.style.width = '4px';
+                        draggedElement.style.height = '100px';
+                    }
+                    
+                    // Create a ghost image for dragging
+                    e.dataTransfer.setDragImage(new Image(), 0, 0);
+                });
+            });
+            
+            // Handle drag over workspace
+            workspace.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                if (draggedElement) {
+                    // Position the dragged element
+                    const rect = workspace.getBoundingClientRect();
+                    const x = e.clientX - rect.left - (draggedElement.offsetWidth / 2);
+                    const y = e.clientY - rect.top - (draggedElement.offsetHeight / 2);
+                    
+                    draggedElement.style.left = x + 'px';
+                    draggedElement.style.top = y + 'px';
+                    
+                    // Add to workspace if not already there
+                    if (!document.getElementById(draggedElement.dataset.id)) {
+                        workspace.appendChild(draggedElement);
+                        makeDraggable(draggedElement);
+                    }
                 }
             });
-        }
-
-        function drawComponent(shape) {
-            ctx.beginPath();
-            if (shape.type === 'battery_main') {
-                ctx.save();
-                ctx.translate(shape.x, shape.y);
-                ctx.fillStyle = '#FFD700';
-                ctx.fillRect(-10, -shape.size / 2, 20, shape.size);
-                ctx.fillStyle = 'red';
-                ctx.fillRect(-2, -shape.size / 2 - 10, 4, 6); // + terminal
-                ctx.fillStyle = 'black';
-                ctx.fillRect(-2, shape.size / 2 + 4, 4, 6); // - terminal
-                ctx.restore();
-            } else if (shape.type === 'wire_pos') {
-                ctx.strokeStyle = 'red';
-                ctx.lineWidth = 4;
-                ctx.moveTo(0, 0);
-                ctx.lineTo(0, shape.size);
-                ctx.stroke();
-            } else if (shape.type === 'wire_neg') {
-                ctx.strokeStyle = 'black';
-                ctx.lineWidth = 4;
-                ctx.moveTo(0, 0);
-                ctx.lineTo(0, shape.size);
-                ctx.stroke();
-            } else if (shape.type === 'resistor') {
-                ctx.strokeStyle = '#663399';
-                ctx.lineWidth = 2;
-                ctx.moveTo(-shape.size / 2 - 10, 0);
-                ctx.lineTo(-shape.size / 2, 0);
-                for (let i = 0; i < 4; i++) {
-                    ctx.lineTo(-shape.size / 2 + i * (shape.size / 4), (i % 2 === 0 ? -10 : 10));
+            
+            // Make placed components draggable
+            function makeDraggable(element) {
+                let isDragging = false;
+                let startX, startY, startLeft, startTop;
+                
+                element.addEventListener('mousedown', function(e) {
+                    if (e.target.tagName === 'INPUT') return;
+                    
+                    isDragging = true;
+                    startX = e.clientX;
+                    startY = e.clientY;
+                    startLeft = parseInt(element.style.left) || 0;
+                    startTop = parseInt(element.style.top) || 0;
+                    
+                    e.preventDefault();
+                });
+                
+                document.addEventListener('mousemove', function(e) {
+                    if (!isDragging) return;
+                    
+                    const dx = e.clientX - startX;
+                    const dy = e.clientY - startY;
+                    
+                    element.style.left = (startLeft + dx) + 'px';
+                    element.style.top = (startTop + dy) + 'px';
+                });
+                
+                document.addEventListener('mouseup', function() {
+                    isDragging = false;
+                });
+            }
+            
+            // Calculate circuit button
+            document.getElementById('calculate-btn').addEventListener('click', function() {
+                const batteries = Array.from(document.querySelectorAll('.circuit-element[data-type="battery"]'));
+                const resistors = Array.from(document.querySelectorAll('.circuit-element[data-type="resistor"]'));
+                
+                // Get battery voltage (assuming one battery for simplicity)
+                let voltage = 0;
+                if (batteries.length > 0) {
+                    const voltageInput = batteries[0].querySelector('input[data-param="voltage"]');
+                    voltage = parseFloat(voltageInput.value) || 0;
                 }
-                ctx.lineTo(shape.size / 2, 0);
-                ctx.lineTo(shape.size / 2 + 10, 0);
-                ctx.stroke();
-            } else if (shape.type.endsWith('_spawn')) {
-                ctx.fillStyle = shape.type === 'wire_spawn' ? 'red' : shape.type === 'wire_neg_spawn' ? 'black' : '#663399';
-                ctx.fillRect(shape.x - 15, shape.y - 15, 30, 30);
-                ctx.fillStyle = '#fff';
-                ctx.font = '14px Arial';
-                ctx.fillText(shape.type.split('_')[0], shape.x - 14, shape.y + 5);
-            } else if (shape.type === 'led') {
-                ctx.fillStyle = 'green';
-                ctx.beginPath();
-                ctx.arc(0, 0, 10, 0, Math.PI * 2);
-                ctx.fill();
-            } else if (shape.type === 'switch') {
-                ctx.strokeStyle = 'blue';
-                ctx.lineWidth = 2;
-                ctx.moveTo(-10, 0);
-                ctx.lineTo(10, 0);
-                ctx.stroke();
-            }
-        }
-
-        function isNear(a, b) {
-            const dx = a.x - b.x, dy = a.y - b.y;
-            return Math.sqrt(dx * dx + dy * dy) < 50;
-        }
-
-        function drawConnections() {
-            for (let i = 0; i < shapes.length; i++) {
-                for (let j = i + 1; j < shapes.length; j++) {
-                    if (isNear(shapes[i], shapes[j])) {
-                        ctx.beginPath();
-                        ctx.strokeStyle = '#00cc00';
-                        ctx.lineWidth = 2;
-                        ctx.moveTo(shapes[i].x, shapes[i].y);
-                        ctx.lineTo(shapes[j].x, shapes[j].y);
-                        ctx.stroke();
-                    }
+                
+                // Get total resistance (assuming series connection for simplicity)
+                let totalResistance = 0;
+                resistors.forEach(resistor => {
+                    const resistanceInput = resistor.querySelector('input[data-param="resistance"]');
+                    totalResistance += parseFloat(resistanceInput.value) || 0;
+                });
+                
+                // Calculate current (Ohm's Law)
+                let current = 0;
+                if (totalResistance > 0) {
+                    current = voltage / totalResistance;
                 }
-            }
-        }
-
-        function render() {
-            drawShapes();
-            drawConnections();
-        }
-
-        canvas.addEventListener('mousedown', e => {
-            const mouseX = e.offsetX;
-            const mouseY = e.offsetY;
-            for (let shape of [...shapes, ...TOOLBOX_SPAWNS]) {
-                if (Math.abs(mouseX - shape.x) < 20 && Math.abs(mouseY - shape.y) < 20) {
-                    if (shape.type.endsWith('_spawn')) {
-                        let newType = shape.type.replace('_spawn', '');
-                        shapes.push({ type: newType, x: shape.x + 40, y: shape.y, size: 30, angle: 0 });
-                        render();
-                        return;
-                    } else {
-                        dragShape = shape;
-                        offsetX = mouseX - shape.x;
-                        offsetY = mouseY - shape.y;
-                        break;
-                    }
+                
+                // Display results
+                const resultsDiv = document.getElementById('results');
+                if (batteries.length === 0) {
+                    resultsDiv.innerHTML = '<p style="color:red;">Please add at least one battery</p>';
+                } else if (resistors.length === 0) {
+                    resultsDiv.innerHTML = '<p style="color:red;">Please add at least one resistor</p>';
+                } else {
+                    resultsDiv.innerHTML = `
+                        <h3>Results:</h3>
+                        <p>Total Voltage: ${voltage} V</p>
+                        <p>Total Resistance: ${totalResistance} Ω</p>
+                        <p>Current: ${current.toFixed(4)} A</p>
+                        <p>Power: ${(voltage * current).toFixed(4)} W</p>
+                    `;
                 }
-            }
+            });
         });
-
-        canvas.addEventListener('mousemove', e => {
-            if (dragShape) {
-                dragShape.x = e.offsetX - offsetX;
-                dragShape.y = e.offsetY - offsetY;
-                render();
-            }
-        });
-
-        canvas.addEventListener('mouseup', () => {
-            dragShape = null;
-        });
-
-        function rotateSelected() {
-            if (dragShape && dragShape.angle !== undefined) {
-                dragShape.angle = (dragShape.angle + 90) % 360;
-                render();
-            }
-        }
-
-        function deleteSelected() {
-            if (dragShape) {
-                const index = shapes.indexOf(dragShape);
-                if (index !== -1) {
-                    shapes.splice(index, 1);
-                    dragShape = null;
-                    render();
-                }
-            }
-        }
-
-        function saveLayout() {
-            localStorage.setItem('circuitLayout', JSON.stringify(shapes));
-            alert('Layout saved!');
-        }
-
-        function loadLayout() {
-            const data = localStorage.getItem('circuitLayout');
-            if (data) {
-                shapes.length = 0;
-                JSON.parse(data).forEach(s => shapes.push(s));
-                render();
-            }
-        }
-
-        window.addEventListener('keydown', e => {
-            if (e.key === 'r') rotateSelected();
-            if (e.key === 'Delete') deleteSelected();
-        });
-
-        render();
     </script>
 </body>
 </html>

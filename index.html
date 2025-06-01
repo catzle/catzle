@@ -1,300 +1,928 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Graphical Circuit Simulator</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Circuit Calculator</title>
     <style>
         body {
             font-family: Arial, sans-serif;
+            line-height: 1.6;
             margin: 0;
             padding: 20px;
             background-color: #f5f5f5;
+            color: #333;
         }
         .container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            max-width: 1200px;
+            max-width: 800px;
             margin: 0 auto;
-        }
-        .components-panel {
-            width: 200px;
             background-color: white;
-            padding: 15px;
+            padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
-        .component {
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+        }
+        .menu {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .menu button {
             padding: 10px;
-            margin: 10px 0;
-            background-color: #e9f7ff;
-            border: 1px solid #b3d9ff;
-            border-radius: 4px;
-            cursor: grab;
-            text-align: center;
-        }
-        .workspace {
-            flex: 1;
-            min-height: 500px;
-            background-color: white;
-            border: 1px dashed #ccc;
-            border-radius: 8px;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        .results-panel {
-            width: 100%;
-            background-color: white;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        .circuit-element {
-            position: absolute;
-            cursor: move;
-        }
-        .battery {
-            width: 60px;
-            height: 60px;
-        }
-        .resistor {
-            width: 80px;
-            height: 30px;
-        }
-        .wire {
-            height: 4px;
-            background-color: black;
-        }
-        .value-input {
-            position: absolute;
-            width: 60px;
-            font-size: 12px;
-            text-align: center;
-        }
-        button {
-            background-color: #4CAF50;
+            background-color: #3498db;
             color: white;
             border: none;
-            padding: 10px 15px;
             border-radius: 4px;
             cursor: pointer;
-            margin-top: 10px;
+            transition: background-color 0.3s;
+        }
+        .menu button:hover {
+            background-color: #2980b9;
+        }
+        .calculator {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            border-left: 4px solid #3498db;
+        }
+        .calculator.active {
+            display: block;
+        }
+        input[type="number"], input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 8px 15px;
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
         }
         button:hover {
-            background-color: #45a049;
+            background-color: #27ae60;
         }
-        .connection-point {
-            width: 8px;
-            height: 8px;
-            background-color: red;
-            border-radius: 50%;
-            position: absolute;
-            z-index: 10;
+        .result {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #e8f8f5;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .history {
+            margin-top: 30px;
+        }
+        .history h2 {
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+        .history-content {
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+        }
+        .hidden {
+            display: none;
+        }
+        .resistor-inputs {
+            display: flex;
+            flex-direction: column;
+        }
+        .resistor-input {
+            margin-bottom: 10px;
+        }
+        .connection-input {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .connection-input select {
+            margin: 0 10px;
+            padding: 5px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="components-panel">
-            <h2>Components</h2>
-            <div class="component" draggable="true" data-type="battery">
-                <svg width="50" height="30" viewBox="0 0 50 30">
-                    <line x1="5" y1="15" x2="15" y2="15" stroke="black" stroke-width="2"/>
-                    <rect x="15" y="5" width="20" height="20" fill="none" stroke="black" stroke-width="2"/>
-                    <line x1="20" y1="10" x2="20" y2="20" stroke="black" stroke-width="2"/>
-                    <line x1="30" y1="10" x2="30" y2="20" stroke="black" stroke-width="2"/>
-                    <line x1="35" y1="15" x2="45" y2="15" stroke="black" stroke-width="2"/>
-                </svg>
-                <div>Battery</div>
-            </div>
-            <div class="component" draggable="true" data-type="resistor">
-                <svg width="50" height="30" viewBox="0 0 50 30">
-                    <line x1="5" y1="15" x2="15" y2="15" stroke="black" stroke-width="2"/>
-                    <rect x="15" y="5" width="20" height="20" fill="white" stroke="black" stroke-width="2"/>
-                    <line x1="35" y1="15" x2="45" y2="15" stroke="black" stroke-width="2"/>
-                </svg>
-                <div>Resistor</div>
-            </div>
-            <div class="component" draggable="true" data-type="wire-h">
-                <svg width="50" height="30" viewBox="0 0 50 30">
-                    <line x1="5" y1="15" x2="45" y2="15" stroke="black" stroke-width="2"/>
-                </svg>
-                <div>Horizontal Wire</div>
-            </div>
-            <div class="component" draggable="true" data-type="wire-v">
-                <svg width="30" height="50" viewBox="0 0 30 50">
-                    <line x1="15" y1="5" x2="15" y2="45" stroke="black" stroke-width="2"/>
-                </svg>
-                <div>Vertical Wire</div>
-            </div>
+        <h1>Circuit Calculator</h1>
+        
+        <div class="menu">
+            <button onclick="showCalculator('power')">Power</button>
+            <button onclick="showCalculator('resistance')">Resistance</button>
+            <button onclick="showCalculator('current')">Current</button>
+            <button onclick="showCalculator('voltage')">Voltage</button>
+            <button onclick="showCalculator('energy')">Energy</button>
+            <button onclick="showCalculator('series')">Series Resistance</button>
+            <button onclick="showCalculator('parallel')">Parallel Resistance</button>
+            <button onclick="showCalculator('random')">Complex Resistance</button>
+            <button onclick="showCalculator('nodes')">Nodes</button>
+            <button onclick="showCalculator('meshes')">Meshes</button>
+            <button onclick="showCalculator('branches')">Branches</button>
+            <button onclick="showCalculator('deltaToY')">Delta to Y</button>
+            <button onclick="showCalculator('yToDelta')">Y to Delta</button>
+            <button onclick="showHistory()">Saved Results</button>
         </div>
         
-        <div class="workspace" id="workspace">
-            <div id="connection-points" style="display:none;"></div>
+        <!-- Power Calculator -->
+        <div id="power" class="calculator">
+            <h2>Power Calculator</h2>
+            <select id="powerMethod" onchange="changePowerMethod()">
+                <option value="vi">Using Voltage and Current</option>
+                <option value="ir">Using Current and Resistance</option>
+                <option value="vr">Using Voltage and Resistance</option>
+            </select>
+            
+            <div id="powerVI">
+                <label for="voltage1">Voltage (V):</label>
+                <input type="number" id="voltage1" step="any">
+                
+                <label for="current1">Current (A):</label>
+                <input type="number" id="current1" step="any">
+            </div>
+            
+            <div id="powerIR" class="hidden">
+                <label for="current2">Current (A):</label>
+                <input type="number" id="current2" step="any">
+                
+                <label for="resistance1">Resistance (Ω):</label>
+                <input type="number" id="resistance1" step="any">
+            </div>
+            
+            <div id="powerVR" class="hidden">
+                <label for="voltage2">Voltage (V):</label>
+                <input type="number" id="voltage2" step="any">
+                
+                <label for="resistance2">Resistance (Ω):</label>
+                <input type="number" id="resistance2" step="any">
+            </div>
+            
+            <button onclick="calculatePower()">Calculate</button>
+            <button onclick="resetCalculator('power')">Reset</button>
+            
+            <div id="powerResult" class="result hidden"></div>
         </div>
         
-        <div class="results-panel">
-            <h2>Circuit Analysis</h2>
-            <button id="calculate-btn">Calculate Circuit</button>
-            <div id="results">
-                <p>Place components and click calculate to see results.</p>
+        <!-- Resistance Calculator -->
+        <div id="resistance" class="calculator">
+            <h2>Resistance Calculator</h2>
+            <label for="voltageR">Voltage (V):</label>
+            <input type="number" id="voltageR" step="any">
+            
+            <label for="currentR">Current (A):</label>
+            <input type="number" id="currentR" step="any">
+            
+            <button onclick="calculateResistance()">Calculate</button>
+            <button onclick="resetCalculator('resistance')">Reset</button>
+            
+            <div id="resistanceResult" class="result hidden"></div>
+        </div>
+        
+        <!-- Current Calculator -->
+        <div id="current" class="calculator">
+            <h2>Current Calculator</h2>
+            <label for="voltageC">Voltage (V):</label>
+            <input type="number" id="voltageC" step="any">
+            
+            <label for="resistanceC">Resistance (Ω):</label>
+            <input type="number" id="resistanceC" step="any">
+            
+            <button onclick="calculateCurrent()">Calculate</button>
+            <button onclick="resetCalculator('current')">Reset</button>
+            
+            <div id="currentResult" class="result hidden"></div>
+        </div>
+        
+        <!-- Voltage Calculator -->
+        <div id="voltage" class="calculator">
+            <h2>Voltage Calculator</h2>
+            <label for="currentV">Current (A):</label>
+            <input type="number" id="currentV" step="any">
+            
+            <label for="resistanceV">Resistance (Ω):</label>
+            <input type="number" id="resistanceV" step="any">
+            
+            <button onclick="calculateVoltage()">Calculate</button>
+            <button onclick="resetCalculator('voltage')">Reset</button>
+            
+            <div id="voltageResult" class="result hidden"></div>
+        </div>
+        
+        <!-- Energy Calculator -->
+        <div id="energy" class="calculator">
+            <h2>Energy Calculator</h2>
+            <label for="powerE">Power (W):</label>
+            <input type="number" id="powerE" step="any">
+            
+            <label for="timeE">Time (s):</label>
+            <input type="number" id="timeE" step="any">
+            
+            <button onclick="calculateEnergy()">Calculate</button>
+            <button onclick="resetCalculator('energy')">Reset</button>
+            
+            <div id="energyResult" class="result hidden"></div>
+        </div>
+        
+        <!-- Series Resistance Calculator -->
+        <div id="series" class="calculator">
+            <h2>Series Resistance Calculator</h2>
+            <label for="seriesCount">Number of Resistors:</label>
+            <input type="number" id="seriesCount" min="1" value="2">
+            
+            <div id="seriesInputs" class="resistor-inputs">
+                <div class="resistor-input">
+                    <label>Resistor 1 (Ω):</label>
+                    <input type="number" class="seriesResistor" step="any">
+                </div>
+                <div class="resistor-input">
+                    <label>Resistor 2 (Ω):</label>
+                    <input type="number" class="seriesResistor" step="any">
+                </div>
             </div>
+            
+            <button onclick="calculateSeries()">Calculate</button>
+            <button onclick="resetCalculator('series')">Reset</button>
+            
+            <div id="seriesResult" class="result hidden"></div>
+        </div>
+        
+        <!-- Parallel Resistance Calculator -->
+        <div id="parallel" class="calculator">
+            <h2>Parallel Resistance Calculator</h2>
+            <label for="parallelCount">Number of Resistors:</label>
+            <input type="number" id="parallelCount" min="1" value="2">
+            
+            <div id="parallelInputs" class="resistor-inputs">
+                <div class="resistor-input">
+                    <label>Resistor 1 (Ω):</label>
+                    <input type="number" class="parallelResistor" step="any">
+                </div>
+                <div class="resistor-input">
+                    <label>Resistor 2 (Ω):</label>
+                    <input type="number" class="parallelResistor" step="any">
+                </div>
+            </div>
+            
+            <button onclick="calculateParallel()">Calculate</button>
+            <button onclick="resetCalculator('parallel')">Reset</button>
+            
+            <div id="parallelResult" class="result hidden"></div>
+        </div>
+        
+        <!-- Complex Resistance Calculator -->
+        <div id="random" class="calculator">
+            <h2>Complex Resistance Calculator</h2>
+            <p>Add resistors and specify their connections (series or parallel):</p>
+            
+            <div id="complexInputs">
+                <div class="connection-input">
+                    <label>Resistor 1 (Ω):</label>
+                    <input type="number" class="complexResistor" step="any">
+                </div>
+                <div class="connection-input">
+                    <select class="complexConnection">
+                        <option value="s">Series</option>
+                        <option value="p">Parallel</option>
+                    </select>
+                    <label>Resistor 2 (Ω):</label>
+                    <input type="number" class="complexResistor" step="any">
+                </div>
+            </div>
+            
+            <button onclick="addResistor()">Add Another Resistor</button>
+            <button onclick="calculateComplex()">Calculate</button>
+            <button onclick="resetCalculator('random')">Reset</button>
+            
+            <div id="complexResult" class="result hidden"></div>
+        </div>
+        
+        <!-- Nodes Calculator -->
+        <div id="nodes" class="calculator">
+            <h2>Nodes Calculator</h2>
+            <label for="branchesN">Number of Branches:</label>
+            <input type="number" id="branchesN" min="1">
+            
+            <label for="meshesN">Number of Meshes:</label>
+            <input type="number" id="meshesN" min="1">
+            
+            <button onclick="calculateNodes()">Calculate</button>
+            <button onclick="resetCalculator('nodes')">Reset</button>
+            
+            <div id="nodesResult" class="result hidden"></div>
+        </div>
+        
+        <!-- Meshes Calculator -->
+        <div id="meshes" class="calculator">
+            <h2>Meshes Calculator</h2>
+            <label for="branchesM">Number of Branches:</label>
+            <input type="number" id="branchesM" min="1">
+            
+            <label for="nodesM">Number of Nodes:</label>
+            <input type="number" id="nodesM" min="1">
+            
+            <button onclick="calculateMeshes()">Calculate</button>
+            <button onclick="resetCalculator('meshes')">Reset</button>
+            
+            <div id="meshesResult" class="result hidden"></div>
+        </div>
+        
+        <!-- Branches Calculator -->
+        <div id="branches" class="calculator">
+            <h2>Branches Calculator</h2>
+            <label for="nodesB">Number of Nodes:</label>
+            <input type="number" id="nodesB" min="1">
+            
+            <label for="meshesB">Number of Meshes:</label>
+            <input type="number" id="meshesB" min="1">
+            
+            <button onclick="calculateBranches()">Calculate</button>
+            <button onclick="resetCalculator('branches')">Reset</button>
+            
+            <div id="branchesResult" class="result hidden"></div>
+        </div>
+        
+        <!-- Delta to Y Calculator -->
+        <div id="deltaToY" class="calculator">
+            <h2>Delta to Y Conversion</h2>
+            <label for="deltaR1">R1 (Ω):</label>
+            <input type="number" id="deltaR1" step="any">
+            
+            <label for="deltaR2">R2 (Ω):</label>
+            <input type="number" id="deltaR2" step="any">
+            
+            <label for="deltaR3">R3 (Ω):</label>
+            <input type="number" id="deltaR3" step="any">
+            
+            <button onclick="calculateDeltaToY()">Calculate</button>
+            <button onclick="resetCalculator('deltaToY')">Reset</button>
+            
+            <div id="deltaToYResult" class="result hidden"></div>
+        </div>
+        
+        <!-- Y to Delta Calculator -->
+        <div id="yToDelta" class="calculator">
+            <h2>Y to Delta Conversion</h2>
+            <label for="yRa">Ra (Ω):</label>
+            <input type="number" id="yRa" step="any">
+            
+            <label for="yRb">Rb (Ω):</label>
+            <input type="number" id="yRb" step="any">
+            
+            <label for="yRc">Rc (Ω):</label>
+            <input type="number" id="yRc" step="any">
+            
+            <button onclick="calculateYToDelta()">Calculate</button>
+            <button onclick="resetCalculator('yToDelta')">Reset</button>
+            
+            <div id="yToDeltaResult" class="result hidden"></div>
+        </div>
+        
+        <!-- History Section -->
+        <div id="history" class="calculator">
+            <h2>Saved Results</h2>
+            <div class="history-content" id="historyContent">
+                No calculations saved yet.
+            </div>
+            <button onclick="clearHistory()">Clear History</button>
         </div>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const workspace = document.getElementById('workspace');
-            let draggedElement = null;
-            let offsetX, offsetY;
-            let componentCount = 0;
-            
-            // Make components draggable
-            document.querySelectorAll('.component').forEach(comp => {
-                comp.addEventListener('dragstart', function(e) {
-                    draggedElement = this.cloneNode(true);
-                    draggedElement.classList.add('circuit-element');
-                    draggedElement.dataset.id = 'comp-' + (++componentCount);
-                    draggedElement.dataset.type = this.dataset.type;
-                    
-                    // Set different styles based on component type
-                    if (this.dataset.type === 'battery') {
-                        draggedElement.classList.add('battery');
-                        draggedElement.innerHTML = `
-                            <svg width="60" height="60" viewBox="0 0 50 30">
-                                <line x1="5" y1="15" x2="15" y2="15" stroke="black" stroke-width="2"/>
-                                <rect x="15" y="5" width="20" height="20" fill="none" stroke="black" stroke-width="2"/>
-                                <line x1="20" y1="10" x2="20" y2="20" stroke="black" stroke-width="2"/>
-                                <line x1="30" y1="10" x2="30" y2="20" stroke="black" stroke-width="2"/>
-                                <line x1="35" y1="15" x2="45" y2="15" stroke="black" stroke-width="2"/>
-                            </svg>
-                            <input type="number" class="value-input" placeholder="V" 
-                                   style="top: 30px; left: 15px;" data-param="voltage">
-                        `;
-                    } 
-                    else if (this.dataset.type === 'resistor') {
-                        draggedElement.classList.add('resistor');
-                        draggedElement.innerHTML = `
-                            <svg width="80" height="30" viewBox="0 0 50 30">
-                                <line x1="5" y1="15" x2="15" y2="15" stroke="black" stroke-width="2"/>
-                                <rect x="15" y="5" width="20" height="20" fill="white" stroke="black" stroke-width="2"/>
-                                <line x1="35" y1="15" x2="45" y2="15" stroke="black" stroke-width="2"/>
-                            </svg>
-                            <input type="number" class="value-input" placeholder="Ω" 
-                                   style="top: 35px; left: 10px;" data-param="resistance">
-                        `;
-                    }
-                    else if (this.dataset.type === 'wire-h') {
-                        draggedElement.classList.add('wire');
-                        draggedElement.style.width = '100px';
-                        draggedElement.style.height = '4px';
-                    }
-                    else if (this.dataset.type === 'wire-v') {
-                        draggedElement.classList.add('wire');
-                        draggedElement.style.width = '4px';
-                        draggedElement.style.height = '100px';
-                    }
-                    
-                    // Create a ghost image for dragging
-                    e.dataTransfer.setDragImage(new Image(), 0, 0);
-                });
+        // Global variable to store calculation history
+        let calculationHistory = [];
+        
+        // Show the selected calculator and hide others
+        function showCalculator(calculatorId) {
+            // Hide all calculators
+            const calculators = document.querySelectorAll('.calculator');
+            calculators.forEach(calc => {
+                calc.classList.remove('active');
             });
             
-            // Handle drag over workspace
-            workspace.addEventListener('dragover', function(e) {
-                e.preventDefault();
-                if (draggedElement) {
-                    // Position the dragged element
-                    const rect = workspace.getBoundingClientRect();
-                    const x = e.clientX - rect.left - (draggedElement.offsetWidth / 2);
-                    const y = e.clientY - rect.top - (draggedElement.offsetHeight / 2);
-                    
-                    draggedElement.style.left = x + 'px';
-                    draggedElement.style.top = y + 'px';
-                    
-                    // Add to workspace if not already there
-                    if (!document.getElementById(draggedElement.dataset.id)) {
-                        workspace.appendChild(draggedElement);
-                        makeDraggable(draggedElement);
-                    }
+            // Show the selected one
+            document.getElementById(calculatorId).classList.add('active');
+            
+            // Special case for history
+            if (calculatorId === 'history') {
+                showHistory();
+            }
+        }
+        
+        // Reset a calculator
+        function resetCalculator(calculatorId) {
+            const calculator = document.getElementById(calculatorId);
+            const inputs = calculator.querySelectorAll('input');
+            inputs.forEach(input => {
+                input.value = '';
+            });
+            
+            const resultDiv = calculator.querySelector('.result');
+            resultDiv.classList.add('hidden');
+        }
+        
+        // Change power calculation method
+        function changePowerMethod() {
+            const method = document.getElementById('powerMethod').value;
+            
+            document.getElementById('powerVI').classList.add('hidden');
+            document.getElementById('powerIR').classList.add('hidden');
+            document.getElementById('powerVR').classList.add('hidden');
+            
+            if (method === 'vi') {
+                document.getElementById('powerVI').classList.remove('hidden');
+            } else if (method === 'ir') {
+                document.getElementById('powerIR').classList.remove('hidden');
+            } else if (method === 'vr') {
+                document.getElementById('powerVR').classList.remove('hidden');
+            }
+        }
+        
+        // Calculate power based on selected method
+        function calculatePower() {
+            const method = document.getElementById('powerMethod').value;
+            let power, expression;
+            
+            if (method === 'vi') {
+                const voltage = parseFloat(document.getElementById('voltage1').value);
+                const current = parseFloat(document.getElementById('current1').value);
+                
+                if (isNaN(voltage) || isNaN(current)) {
+                    alert('Please enter valid numbers for voltage and current');
+                    return;
                 }
-            });
-            
-            // Make placed components draggable
-            function makeDraggable(element) {
-                let isDragging = false;
-                let startX, startY, startLeft, startTop;
                 
-                element.addEventListener('mousedown', function(e) {
-                    if (e.target.tagName === 'INPUT') return;
-                    
-                    isDragging = true;
-                    startX = e.clientX;
-                    startY = e.clientY;
-                    startLeft = parseInt(element.style.left) || 0;
-                    startTop = parseInt(element.style.top) || 0;
-                    
-                    e.preventDefault();
-                });
+                power = voltage * current;
+                expression = `${voltage} V × ${current} A = ${power.toFixed(2)} W`;
+                addToHistory(`Power: ${expression}`);
+            } 
+            else if (method === 'ir') {
+                const current = parseFloat(document.getElementById('current2').value);
+                const resistance = parseFloat(document.getElementById('resistance1').value);
                 
-                document.addEventListener('mousemove', function(e) {
-                    if (!isDragging) return;
-                    
-                    const dx = e.clientX - startX;
-                    const dy = e.clientY - startY;
-                    
-                    element.style.left = (startLeft + dx) + 'px';
-                    element.style.top = (startTop + dy) + 'px';
-                });
+                if (isNaN(current) || isNaN(resistance)) {
+                    alert('Please enter valid numbers for current and resistance');
+                    return;
+                }
                 
-                document.addEventListener('mouseup', function() {
-                    isDragging = false;
-                });
+                power = current * current * resistance;
+                expression = `(${current} A)² × ${resistance} Ω = ${power.toFixed(2)} W`;
+                addToHistory(`Power: ${expression}`);
+            } 
+            else if (method === 'vr') {
+                const voltage = parseFloat(document.getElementById('voltage2').value);
+                const resistance = parseFloat(document.getElementById('resistance2').value);
+                
+                if (isNaN(voltage) || isNaN(resistance)) {
+                    alert('Please enter valid numbers for voltage and resistance');
+                    return;
+                }
+                
+                power = (voltage * voltage) / resistance;
+                expression = `(${voltage} V)² ÷ ${resistance} Ω = ${power.toFixed(2)} W`;
+                addToHistory(`Power: ${expression}`);
             }
             
-            // Calculate circuit button
-            document.getElementById('calculate-btn').addEventListener('click', function() {
-                const batteries = Array.from(document.querySelectorAll('.circuit-element[data-type="battery"]'));
-                const resistors = Array.from(document.querySelectorAll('.circuit-element[data-type="resistor"]'));
-                
-                // Get battery voltage (assuming one battery for simplicity)
-                let voltage = 0;
-                if (batteries.length > 0) {
-                    const voltageInput = batteries[0].querySelector('input[data-param="voltage"]');
-                    voltage = parseFloat(voltageInput.value) || 0;
-                }
-                
-                // Get total resistance (assuming series connection for simplicity)
-                let totalResistance = 0;
-                resistors.forEach(resistor => {
-                    const resistanceInput = resistor.querySelector('input[data-param="resistance"]');
-                    totalResistance += parseFloat(resistanceInput.value) || 0;
-                });
-                
-                // Calculate current (Ohm's Law)
-                let current = 0;
-                if (totalResistance > 0) {
-                    current = voltage / totalResistance;
-                }
-                
-                // Display results
-                const resultsDiv = document.getElementById('results');
-                if (batteries.length === 0) {
-                    resultsDiv.innerHTML = '<p style="color:red;">Please add at least one battery</p>';
-                } else if (resistors.length === 0) {
-                    resultsDiv.innerHTML = '<p style="color:red;">Please add at least one resistor</p>';
-                } else {
-                    resultsDiv.innerHTML = `
-                        <h3>Results:</h3>
-                        <p>Total Voltage: ${voltage} V</p>
-                        <p>Total Resistance: ${totalResistance} Ω</p>
-                        <p>Current: ${current.toFixed(4)} A</p>
-                        <p>Power: ${(voltage * current).toFixed(4)} W</p>
-                    `;
-                }
-            });
+            const resultDiv = document.getElementById('powerResult');
+            resultDiv.textContent = `Power = ${power.toFixed(2)} Watts (${expression})`;
+            resultDiv.classList.remove('hidden');
+        }
+        
+        // Calculate resistance
+        function calculateResistance() {
+            const voltage = parseFloat(document.getElementById('voltageR').value);
+            const current = parseFloat(document.getElementById('currentR').value);
+            
+            if (isNaN(voltage) || isNaN(current)) {
+                alert('Please enter valid numbers for voltage and current');
+                return;
+            }
+            
+            if (current === 0) {
+                alert('Current cannot be zero');
+                return;
+            }
+            
+            const resistance = voltage / current;
+            const expression = `${voltage} V ÷ ${current} A = ${resistance.toFixed(2)} Ω`;
+            
+            const resultDiv = document.getElementById('resistanceResult');
+            resultDiv.textContent = `Resistance = ${resistance.toFixed(2)} Ohms (${expression})`;
+            resultDiv.classList.remove('hidden');
+            
+            addToHistory(`Resistance: ${expression}`);
+        }
+        
+        // Calculate current
+        function calculateCurrent() {
+            const voltage = parseFloat(document.getElementById('voltageC').value);
+            const resistance = parseFloat(document.getElementById('resistanceC').value);
+            
+            if (isNaN(voltage) || isNaN(resistance)) {
+                alert('Please enter valid numbers for voltage and resistance');
+                return;
+            }
+            
+            if (resistance === 0) {
+                alert('Resistance cannot be zero');
+                return;
+            }
+            
+            const current = voltage / resistance;
+            const expression = `${voltage} V ÷ ${resistance} Ω = ${current.toFixed(2)} A`;
+            
+            const resultDiv = document.getElementById('currentResult');
+            resultDiv.textContent = `Current = ${current.toFixed(2)} Amperes (${expression})`;
+            resultDiv.classList.remove('hidden');
+            
+            addToHistory(`Current: ${expression}`);
+        }
+        
+        // Calculate voltage
+        function calculateVoltage() {
+            const current = parseFloat(document.getElementById('currentV').value);
+            const resistance = parseFloat(document.getElementById('resistanceV').value);
+            
+            if (isNaN(current) || isNaN(resistance)) {
+                alert('Please enter valid numbers for current and resistance');
+                return;
+            }
+            
+            const voltage = current * resistance;
+            const expression = `${current} A × ${resistance} Ω = ${voltage.toFixed(2)} V`;
+            
+            const resultDiv = document.getElementById('voltageResult');
+            resultDiv.textContent = `Voltage = ${voltage.toFixed(2)} Volts (${expression})`;
+            resultDiv.classList.remove('hidden');
+            
+            addToHistory(`Voltage: ${expression}`);
+        }
+        
+        // Calculate energy
+        function calculateEnergy() {
+            const power = parseFloat(document.getElementById('powerE').value);
+            const time = parseFloat(document.getElementById('timeE').value);
+            
+            if (isNaN(power) || isNaN(time)) {
+                alert('Please enter valid numbers for power and time');
+                return;
+            }
+            
+            const energy = power * time;
+            const expression = `${power} W × ${time} s = ${energy.toFixed(2)} J`;
+            
+            const resultDiv = document.getElementById('energyResult');
+            resultDiv.textContent = `Energy = ${energy.toFixed(2)} Joules (${expression})`;
+            resultDiv.classList.remove('hidden');
+            
+            addToHistory(`Energy: ${expression}`);
+        }
+        
+        // Update series resistor inputs based on count
+        document.getElementById('seriesCount').addEventListener('change', function() {
+            const count = parseInt(this.value);
+            const container = document.getElementById('seriesInputs');
+            
+            // Clear existing inputs
+            container.innerHTML = '';
+            
+            // Add new inputs
+            for (let i = 0; i < count; i++) {
+                const div = document.createElement('div');
+                div.className = 'resistor-input';
+                div.innerHTML = `
+                    <label>Resistor ${i+1} (Ω):</label>
+                    <input type="number" class="seriesResistor" step="any">
+                `;
+                container.appendChild(div);
+            }
         });
+        
+        // Calculate series resistance
+        function calculateSeries() {
+            const resistors = document.querySelectorAll('.seriesResistor');
+            let total = 0;
+            let expression = '';
+            
+            for (let i = 0; i < resistors.length; i++) {
+                const value = parseFloat(resistors[i].value);
+                
+                if (isNaN(value)) {
+                    alert(`Please enter a valid number for Resistor ${i+1}`);
+                    return;
+                }
+                
+                total += value;
+                expression += (i > 0 ? ' + ' : '') + value;
+            }
+            
+            expression += ` = ${total.toFixed(2)} Ω`;
+            
+            const resultDiv = document.getElementById('seriesResult');
+            resultDiv.textContent = `Total Series Resistance = ${total.toFixed(2)} Ohms (${expression})`;
+            resultDiv.classList.remove('hidden');
+            
+            addToHistory(`Series Resistance: ${expression}`);
+        }
+        
+        // Update parallel resistor inputs based on count
+        document.getElementById('parallelCount').addEventListener('change', function() {
+            const count = parseInt(this.value);
+            const container = document.getElementById('parallelInputs');
+            
+            // Clear existing inputs
+            container.innerHTML = '';
+            
+            // Add new inputs
+            for (let i = 0; i < count; i++) {
+                const div = document.createElement('div');
+                div.className = 'resistor-input';
+                div.innerHTML = `
+                    <label>Resistor ${i+1} (Ω):</label>
+                    <input type="number" class="parallelResistor" step="any">
+                `;
+                container.appendChild(div);
+            }
+        });
+        
+        // Calculate parallel resistance
+        function calculateParallel() {
+            const resistors = document.querySelectorAll('.parallelResistor');
+            let reciprocalTotal = 0;
+            let expression = '1 / (';
+            
+            for (let i = 0; i < resistors.length; i++) {
+                const value = parseFloat(resistors[i].value);
+                
+                if (isNaN(value)) {
+                    alert(`Please enter a valid number for Resistor ${i+1}`);
+                    return;
+                }
+                
+                if (value === 0) {
+                    alert('Resistance cannot be zero');
+                    return;
+                }
+                
+                reciprocalTotal += 1 / value;
+                expression += (i > 0 ? ' + ' : '') + `1/${value}`;
+            }
+            
+            const total = 1 / reciprocalTotal;
+            expression += `) = ${total.toFixed(2)} Ω`;
+            
+            const resultDiv = document.getElementById('parallelResult');
+            resultDiv.textContent = `Total Parallel Resistance = ${total.toFixed(2)} Ohms (${expression})`;
+            resultDiv.classList.remove('hidden');
+            
+            addToHistory(`Parallel Resistance: ${expression}`);
+        }
+        
+        // Add another resistor to complex calculation
+        function addResistor() {
+            const container = document.getElementById('complexInputs');
+            const count = container.querySelectorAll('.connection-input').length + 1;
+            
+            const div = document.createElement('div');
+            div.className = 'connection-input';
+            div.innerHTML = `
+                <select class="complexConnection">
+                    <option value="s">Series</option>
+                    <option value="p">Parallel</option>
+                </select>
+                <label>Resistor ${count} (Ω):</label>
+                <input type="number" class="complexResistor" step="any">
+            `;
+            container.appendChild(div);
+        }
+        
+        // Calculate complex resistance
+        function calculateComplex() {
+            const resistors = document.querySelectorAll('.complexResistor');
+            const connections = document.querySelectorAll('.complexConnection');
+            
+            if (resistors.length < 2) {
+                alert('You need at least 2 resistors');
+                return;
+            }
+            
+            // Get first resistor
+            let total = parseFloat(resistors[0].value);
+            if (isNaN(total)) {
+                alert('Please enter a valid number for the first resistor');
+                return;
+            }
+            
+            let expression = `${total}`;
+            
+            // Process subsequent resistors
+            for (let i = 1; i < resistors.length; i++) {
+                const value = parseFloat(resistors[i].value);
+                if (isNaN(value)) {
+                    alert(`Please enter a valid number for Resistor ${i+1}`);
+                    return;
+                }
+                
+                const connection = connections[i-1].value;
+                
+                if (connection === 's') {
+                    total += value;
+                    expression += ` + ${value}`;
+                } else if (connection === 'p') {
+                    total = (total * value) / (total + value);
+                    expression += ` ∥ ${value}`;
+                }
+            }
+            
+            expression += ` = ${total.toFixed(2)} Ω`;
+            
+            const resultDiv = document.getElementById('complexResult');
+            resultDiv.textContent = `Equivalent Resistance = ${total.toFixed(2)} Ohms (${expression})`;
+            resultDiv.classList.remove('hidden');
+            
+            addToHistory(`Complex Resistance: ${expression}`);
+        }
+        
+        // Calculate nodes
+        function calculateNodes() {
+            const branches = parseInt(document.getElementById('branchesN').value);
+            const meshes = parseInt(document.getElementById('meshesN').value);
+            
+            if (isNaN(branches) || isNaN(meshes)) {
+                alert('Please enter valid numbers for branches and meshes');
+                return;
+            }
+            
+            const nodes = branches - meshes + 1;
+            const expression = `${branches} branches - ${meshes} meshes + 1 = ${nodes} nodes`;
+            
+            const resultDiv = document.getElementById('nodesResult');
+            resultDiv.textContent = `Number of Nodes = ${nodes} (${expression})`;
+            resultDiv.classList.remove('hidden');
+            
+            addToHistory(`Nodes: ${expression}`);
+        }
+        
+        // Calculate meshes
+        function calculateMeshes() {
+            const branches = parseInt(document.getElementById('branchesM').value);
+            const nodes = parseInt(document.getElementById('nodesM').value);
+            
+            if (isNaN(branches) || isNaN(nodes)) {
+                alert('Please enter valid numbers for branches and nodes');
+                return;
+            }
+            
+            const meshes = branches - nodes + 1;
+            const expression = `${branches} branches - ${nodes} nodes + 1 = ${meshes} meshes`;
+            
+            const resultDiv = document.getElementById('meshesResult');
+            resultDiv.textContent = `Number of Meshes = ${meshes} (${expression})`;
+            resultDiv.classList.remove('hidden');
+            
+            addToHistory(`Meshes: ${expression}`);
+        }
+        
+        // Calculate branches
+        function calculateBranches() {
+            const nodes = parseInt(document.getElementById('nodesB').value);
+            const meshes = parseInt(document.getElementById('meshesB').value);
+            
+            if (isNaN(nodes) || isNaN(meshes)) {
+                alert('Please enter valid numbers for nodes and meshes');
+                return;
+            }
+            
+            const branches = nodes + meshes - 1;
+            const expression = `${nodes} nodes + ${meshes} meshes - 1 = ${branches} branches`;
+            
+            const resultDiv = document.getElementById('branchesResult');
+            resultDiv.textContent = `Number of Branches = ${branches} (${expression})`;
+            resultDiv.classList.remove('hidden');
+            
+            addToHistory(`Branches: ${expression}`);
+        }
+        
+        // Calculate Delta to Y conversion
+        function calculateDeltaToY() {
+            const r1 = parseFloat(document.getElementById('deltaR1').value);
+            const r2 = parseFloat(document.getElementById('deltaR2').value);
+            const r3 = parseFloat(document.getElementById('deltaR3').value);
+            
+            if (isNaN(r1) || isNaN(r2) || isNaN(r3)) {
+                alert('Please enter valid numbers for all resistors');
+                return;
+            }
+            
+            const sum = r1 + r2 + r3;
+            const ra = (r2 * r3) / sum;
+            const rb = (r1 * r3) / sum;
+            const rc = (r1 * r2) / sum;
+            
+            const resultDiv = document.getElementById('deltaToYResult');
+            resultDiv.innerHTML = `
+                <p>Ra = ${ra.toFixed(2)} Ω (R2×R3 ÷ (R1+R2+R3))</p>
+                <p>Rb = ${rb.toFixed(2)} Ω (R1×R3 ÷ (R1+R2+R3))</p>
+                <p>Rc = ${rc.toFixed(2)} Ω (R1×R2 ÷ (R1+R2+R3))</p>
+            `;
+            resultDiv.classList.remove('hidden');
+            
+            addToHistory(`Delta to Y: R1=${r1}, R2=${r2}, R3=${r3} → Ra=${ra.toFixed(2)}, Rb=${rb.toFixed(2)}, Rc=${rc.toFixed(2)}`);
+        }
+        
+        // Calculate Y to Delta conversion
+        function calculateYToDelta() {
+            const ra = parseFloat(document.getElementById('yRa').value);
+            const rb = parseFloat(document.getElementById('yRb').value);
+            const rc = parseFloat(document.getElementById('yRc').value);
+            
+            if (isNaN(ra) || isNaN(rb) || isNaN(rc)) {
+                alert('Please enter valid numbers for all resistors');
+                return;
+            }
+            
+            const numerator = (ra * rb) + (rb * rc) + (rc * ra);
+            const r1 = numerator / rc;
+            const r2 = numerator / ra;
+            const r3 = numerator / rb;
+            
+            const resultDiv = document.getElementById('yToDeltaResult');
+            resultDiv.innerHTML = `
+                <p>R1 = ${r1.toFixed(2)} Ω ((Ra×Rb + Rb×Rc + Rc×Ra) ÷ Rc)</p>
+                <p>R2 = ${r2.toFixed(2)} Ω ((Ra×Rb + Rb×Rc + Rc×Ra) ÷ Ra)</p>
+                <p>R3 = ${r3.toFixed(2)} Ω ((Ra×Rb + Rb×Rc + Rc×Ra) ÷ Rb)</p>
+            `;
+            resultDiv.classList.remove('hidden');
+            
+            addToHistory(`Y to Delta: Ra=${ra}, Rb=${rb}, Rc=${rc} → R1=${r1.toFixed(2)}, R2=${r2.toFixed(2)}, R3=${r3.toFixed(2)}`);
+        }
+        
+        // Add calculation to history
+        function addToHistory(calculation) {
+            calculationHistory.push(calculation);
+            
+            // Keep only the last 50 calculations
+            if (calculationHistory.length > 50) {
+                calculationHistory.shift();
+            }
+            
+            // Save to localStorage
+            localStorage.setItem('circuitCalculatorHistory', JSON.stringify(calculationHistory));
+        }
+        
+        // Show history
+        function showHistory() {
+            // Load from localStorage
+            const savedHistory = localStorage.getItem('circuitCalculatorHistory');
+            if (savedHistory) {
+                calculationHistory = JSON.parse(savedHistory);
+            }
+            
+            const historyContent = document.getElementById('historyContent');
+            
+            if (calculationHistory.length === 0) {
+                historyContent.innerHTML = 'No calculations saved yet.';
+                return;
+            }
+            
+            let html = '<ul>';
+            for (let i = calculationHistory.length - 1; i >= 0; i--) {
+                html += `<li>${calculationHistory[i]}</li>`;
+            }
+            html += '</ul>';
+            
+            historyContent.innerHTML = html;
+        }
+        
+        // Clear history
+        function clearHistory() {
+            if (confirm('Are you sure you want to clear all saved results?')) {
+                calculationHistory = [];
+                localStorage.removeItem('circuitCalculatorHistory');
+                document.getElementById('historyContent').innerHTML = 'No calculations saved yet.';
+            }
+        }
+        
+        // Initialize the page
+        window.onload = function() {
+            showCalculator('power');
+            changePowerMethod();
+            
+            // Load history if any
+            showHistory();
+        };
     </script>
 </body>
 </html>

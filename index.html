@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Circuit Calculator</title>
+    <title>Electric Circuit Analyzer</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Century Gothic', Arial, sans-serif;
             line-height: 1.6;
             margin: 0;
             padding: 20px;
@@ -24,6 +24,7 @@
         h1 {
             text-align: center;
             color: #2c3e50;
+            font-family: 'Century Gothic', Arial, sans-serif;
         }
         .menu {
             display: grid;
@@ -33,15 +34,16 @@
         }
         .menu button {
             padding: 10px;
-            background-color: #3498db;
+            background-color: #00bcd4; /* Cyan color */
             color: white;
             border: none;
             border-radius: 4px;
             cursor: pointer;
             transition: background-color 0.3s;
+            font-family: 'Century Gothic', Arial, sans-serif;
         }
         .menu button:hover {
-            background-color: #2980b9;
+            background-color: #0097a7; /* Darker cyan on hover */
         }
         .calculator {
             display: none;
@@ -49,30 +51,32 @@
             padding: 15px;
             background-color: #f9f9f9;
             border-radius: 5px;
-            border-left: 4px solid #3498db;
+            border-left: 4px solid #00bcd4;
         }
         .calculator.active {
             display: block;
         }
-        input[type="number"], input[type="text"] {
+        input[type="number"], input[type="text"], select {
             width: 100%;
             padding: 8px;
             margin: 5px 0 15px;
             border: 1px solid #ddd;
             border-radius: 4px;
             box-sizing: border-box;
+            font-family: 'Century Gothic', Arial, sans-serif;
         }
-        button {
+        .calc-button {
             padding: 8px 15px;
-            background-color: #2ecc71;
+            background-color: #757575; /* Grey color */
             color: white;
             border: none;
             border-radius: 4px;
             cursor: pointer;
             margin-right: 10px;
+            font-family: 'Century Gothic', Arial, sans-serif;
         }
-        button:hover {
-            background-color: #27ae60;
+        .calc-button:hover {
+            background-color: #616161; /* Darker grey on hover */
         }
         .result {
             margin-top: 15px;
@@ -80,20 +84,6 @@
             background-color: #e8f8f5;
             border-radius: 4px;
             font-weight: bold;
-        }
-        .history {
-            margin-top: 30px;
-        }
-        .history h2 {
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 5px;
-        }
-        .history-content {
-            max-height: 200px;
-            overflow-y: auto;
-            padding: 10px;
-            background-color: #f9f9f9;
-            border-radius: 4px;
         }
         .hidden {
             display: none;
@@ -118,7 +108,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>Circuit Calculator</h1>
+        <h1>Electric Circuit Analyzer</h1>
         
         <div class="menu">
             <button onclick="showCalculator('power')">Power</button>
@@ -134,7 +124,6 @@
             <button onclick="showCalculator('branches')">Branches</button>
             <button onclick="showCalculator('deltaToY')">Delta to Y</button>
             <button onclick="showCalculator('yToDelta')">Y to Delta</button>
-            <button onclick="showHistory()">Saved Results</button>
         </div>
         
         <!-- Power Calculator -->
@@ -170,8 +159,8 @@
                 <input type="number" id="resistance2" step="any">
             </div>
             
-            <button onclick="calculatePower()">Calculate</button>
-            <button onclick="resetCalculator('power')">Reset</button>
+            <button class="calc-button" onclick="calculatePower()">Calculate</button>
+            <button class="calc-button" onclick="resetCalculator('power')">Reset</button>
             
             <div id="powerResult" class="result hidden"></div>
         </div>
@@ -185,8 +174,8 @@
             <label for="currentR">Current (A):</label>
             <input type="number" id="currentR" step="any">
             
-            <button onclick="calculateResistance()">Calculate</button>
-            <button onclick="resetCalculator('resistance')">Reset</button>
+            <button class="calc-button" onclick="calculateResistance()">Calculate</button>
+            <button class="calc-button" onclick="resetCalculator('resistance')">Reset</button>
             
             <div id="resistanceResult" class="result hidden"></div>
         </div>
@@ -200,8 +189,8 @@
             <label for="resistanceC">Resistance (Ω):</label>
             <input type="number" id="resistanceC" step="any">
             
-            <button onclick="calculateCurrent()">Calculate</button>
-            <button onclick="resetCalculator('current')">Reset</button>
+            <button class="calc-button" onclick="calculateCurrent()">Calculate</button>
+            <button class="calc-button" onclick="resetCalculator('current')">Reset</button>
             
             <div id="currentResult" class="result hidden"></div>
         </div>
@@ -215,8 +204,8 @@
             <label for="resistanceV">Resistance (Ω):</label>
             <input type="number" id="resistanceV" step="any">
             
-            <button onclick="calculateVoltage()">Calculate</button>
-            <button onclick="resetCalculator('voltage')">Reset</button>
+            <button class="calc-button" onclick="calculateVoltage()">Calculate</button>
+            <button class="calc-button" onclick="resetCalculator('voltage')">Reset</button>
             
             <div id="voltageResult" class="result hidden"></div>
         </div>
@@ -230,8 +219,8 @@
             <label for="timeE">Time (s):</label>
             <input type="number" id="timeE" step="any">
             
-            <button onclick="calculateEnergy()">Calculate</button>
-            <button onclick="resetCalculator('energy')">Reset</button>
+            <button class="calc-button" onclick="calculateEnergy()">Calculate</button>
+            <button class="calc-button" onclick="resetCalculator('energy')">Reset</button>
             
             <div id="energyResult" class="result hidden"></div>
         </div>
@@ -253,8 +242,8 @@
                 </div>
             </div>
             
-            <button onclick="calculateSeries()">Calculate</button>
-            <button onclick="resetCalculator('series')">Reset</button>
+            <button class="calc-button" onclick="calculateSeries()">Calculate</button>
+            <button class="calc-button" onclick="resetCalculator('series')">Reset</button>
             
             <div id="seriesResult" class="result hidden"></div>
         </div>
@@ -276,8 +265,8 @@
                 </div>
             </div>
             
-            <button onclick="calculateParallel()">Calculate</button>
-            <button onclick="resetCalculator('parallel')">Reset</button>
+            <button class="calc-button" onclick="calculateParallel()">Calculate</button>
+            <button class="calc-button" onclick="resetCalculator('parallel')">Reset</button>
             
             <div id="parallelResult" class="result hidden"></div>
         </div>
@@ -302,9 +291,9 @@
                 </div>
             </div>
             
-            <button onclick="addResistor()">Add Another Resistor</button>
-            <button onclick="calculateComplex()">Calculate</button>
-            <button onclick="resetCalculator('random')">Reset</button>
+            <button class="calc-button" onclick="addResistor()">Add Another Resistor</button>
+            <button class="calc-button" onclick="calculateComplex()">Calculate</button>
+            <button class="calc-button" onclick="resetCalculator('random')">Reset</button>
             
             <div id="complexResult" class="result hidden"></div>
         </div>
@@ -318,8 +307,8 @@
             <label for="meshesN">Number of Meshes:</label>
             <input type="number" id="meshesN" min="1">
             
-            <button onclick="calculateNodes()">Calculate</button>
-            <button onclick="resetCalculator('nodes')">Reset</button>
+            <button class="calc-button" onclick="calculateNodes()">Calculate</button>
+            <button class="calc-button" onclick="resetCalculator('nodes')">Reset</button>
             
             <div id="nodesResult" class="result hidden"></div>
         </div>
@@ -333,8 +322,8 @@
             <label for="nodesM">Number of Nodes:</label>
             <input type="number" id="nodesM" min="1">
             
-            <button onclick="calculateMeshes()">Calculate</button>
-            <button onclick="resetCalculator('meshes')">Reset</button>
+            <button class="calc-button" onclick="calculateMeshes()">Calculate</button>
+            <button class="calc-button" onclick="resetCalculator('meshes')">Reset</button>
             
             <div id="meshesResult" class="result hidden"></div>
         </div>
@@ -348,8 +337,8 @@
             <label for="meshesB">Number of Meshes:</label>
             <input type="number" id="meshesB" min="1">
             
-            <button onclick="calculateBranches()">Calculate</button>
-            <button onclick="resetCalculator('branches')">Reset</button>
+            <button class="calc-button" onclick="calculateBranches()">Calculate</button>
+            <button class="calc-button" onclick="resetCalculator('branches')">Reset</button>
             
             <div id="branchesResult" class="result hidden"></div>
         </div>
@@ -366,8 +355,8 @@
             <label for="deltaR3">R3 (Ω):</label>
             <input type="number" id="deltaR3" step="any">
             
-            <button onclick="calculateDeltaToY()">Calculate</button>
-            <button onclick="resetCalculator('deltaToY')">Reset</button>
+            <button class="calc-button" onclick="calculateDeltaToY()">Calculate</button>
+            <button class="calc-button" onclick="resetCalculator('deltaToY')">Reset</button>
             
             <div id="deltaToYResult" class="result hidden"></div>
         </div>
@@ -384,26 +373,14 @@
             <label for="yRc">Rc (Ω):</label>
             <input type="number" id="yRc" step="any">
             
-            <button onclick="calculateYToDelta()">Calculate</button>
-            <button onclick="resetCalculator('yToDelta')">Reset</button>
+            <button class="calc-button" onclick="calculateYToDelta()">Calculate</button>
+            <button class="calc-button" onclick="resetCalculator('yToDelta')">Reset</button>
             
             <div id="yToDeltaResult" class="result hidden"></div>
-        </div>
-        
-        <!-- History Section -->
-        <div id="history" class="calculator">
-            <h2>Saved Results</h2>
-            <div class="history-content" id="historyContent">
-                No calculations saved yet.
-            </div>
-            <button onclick="clearHistory()">Clear History</button>
         </div>
     </div>
 
     <script>
-        // Global variable to store calculation history
-        let calculationHistory = [];
-        
         // Show the selected calculator and hide others
         function showCalculator(calculatorId) {
             // Hide all calculators
@@ -414,11 +391,6 @@
             
             // Show the selected one
             document.getElementById(calculatorId).classList.add('active');
-            
-            // Special case for history
-            if (calculatorId === 'history') {
-                showHistory();
-            }
         }
         
         // Reset a calculator
@@ -466,7 +438,6 @@
                 
                 power = voltage * current;
                 expression = `${voltage} V × ${current} A = ${power.toFixed(2)} W`;
-                addToHistory(`Power: ${expression}`);
             } 
             else if (method === 'ir') {
                 const current = parseFloat(document.getElementById('current2').value);
@@ -479,7 +450,6 @@
                 
                 power = current * current * resistance;
                 expression = `(${current} A)² × ${resistance} Ω = ${power.toFixed(2)} W`;
-                addToHistory(`Power: ${expression}`);
             } 
             else if (method === 'vr') {
                 const voltage = parseFloat(document.getElementById('voltage2').value);
@@ -492,7 +462,6 @@
                 
                 power = (voltage * voltage) / resistance;
                 expression = `(${voltage} V)² ÷ ${resistance} Ω = ${power.toFixed(2)} W`;
-                addToHistory(`Power: ${expression}`);
             }
             
             const resultDiv = document.getElementById('powerResult');
@@ -521,8 +490,6 @@
             const resultDiv = document.getElementById('resistanceResult');
             resultDiv.textContent = `Resistance = ${resistance.toFixed(2)} Ohms (${expression})`;
             resultDiv.classList.remove('hidden');
-            
-            addToHistory(`Resistance: ${expression}`);
         }
         
         // Calculate current
@@ -546,8 +513,6 @@
             const resultDiv = document.getElementById('currentResult');
             resultDiv.textContent = `Current = ${current.toFixed(2)} Amperes (${expression})`;
             resultDiv.classList.remove('hidden');
-            
-            addToHistory(`Current: ${expression}`);
         }
         
         // Calculate voltage
@@ -566,8 +531,6 @@
             const resultDiv = document.getElementById('voltageResult');
             resultDiv.textContent = `Voltage = ${voltage.toFixed(2)} Volts (${expression})`;
             resultDiv.classList.remove('hidden');
-            
-            addToHistory(`Voltage: ${expression}`);
         }
         
         // Calculate energy
@@ -586,8 +549,6 @@
             const resultDiv = document.getElementById('energyResult');
             resultDiv.textContent = `Energy = ${energy.toFixed(2)} Joules (${expression})`;
             resultDiv.classList.remove('hidden');
-            
-            addToHistory(`Energy: ${expression}`);
         }
         
         // Update series resistor inputs based on count
@@ -633,8 +594,6 @@
             const resultDiv = document.getElementById('seriesResult');
             resultDiv.textContent = `Total Series Resistance = ${total.toFixed(2)} Ohms (${expression})`;
             resultDiv.classList.remove('hidden');
-            
-            addToHistory(`Series Resistance: ${expression}`);
         }
         
         // Update parallel resistor inputs based on count
@@ -686,8 +645,6 @@
             const resultDiv = document.getElementById('parallelResult');
             resultDiv.textContent = `Total Parallel Resistance = ${total.toFixed(2)} Ohms (${expression})`;
             resultDiv.classList.remove('hidden');
-            
-            addToHistory(`Parallel Resistance: ${expression}`);
         }
         
         // Add another resistor to complex calculation
@@ -751,8 +708,6 @@
             const resultDiv = document.getElementById('complexResult');
             resultDiv.textContent = `Equivalent Resistance = ${total.toFixed(2)} Ohms (${expression})`;
             resultDiv.classList.remove('hidden');
-            
-            addToHistory(`Complex Resistance: ${expression}`);
         }
         
         // Calculate nodes
@@ -771,8 +726,6 @@
             const resultDiv = document.getElementById('nodesResult');
             resultDiv.textContent = `Number of Nodes = ${nodes} (${expression})`;
             resultDiv.classList.remove('hidden');
-            
-            addToHistory(`Nodes: ${expression}`);
         }
         
         // Calculate meshes
@@ -791,8 +744,6 @@
             const resultDiv = document.getElementById('meshesResult');
             resultDiv.textContent = `Number of Meshes = ${meshes} (${expression})`;
             resultDiv.classList.remove('hidden');
-            
-            addToHistory(`Meshes: ${expression}`);
         }
         
         // Calculate branches
@@ -811,8 +762,6 @@
             const resultDiv = document.getElementById('branchesResult');
             resultDiv.textContent = `Number of Branches = ${branches} (${expression})`;
             resultDiv.classList.remove('hidden');
-            
-            addToHistory(`Branches: ${expression}`);
         }
         
         // Calculate Delta to Y conversion
@@ -838,8 +787,6 @@
                 <p>Rc = ${rc.toFixed(2)} Ω (R1×R2 ÷ (R1+R2+R3))</p>
             `;
             resultDiv.classList.remove('hidden');
-            
-            addToHistory(`Delta to Y: R1=${r1}, R2=${r2}, R3=${r3} → Ra=${ra.toFixed(2)}, Rb=${rb.toFixed(2)}, Rc=${rc.toFixed(2)}`);
         }
         
         // Calculate Y to Delta conversion
@@ -865,63 +812,12 @@
                 <p>R3 = ${r3.toFixed(2)} Ω ((Ra×Rb + Rb×Rc + Rc×Ra) ÷ Rb)</p>
             `;
             resultDiv.classList.remove('hidden');
-            
-            addToHistory(`Y to Delta: Ra=${ra}, Rb=${rb}, Rc=${rc} → R1=${r1.toFixed(2)}, R2=${r2.toFixed(2)}, R3=${r3.toFixed(2)}`);
-        }
-        
-        // Add calculation to history
-        function addToHistory(calculation) {
-            calculationHistory.push(calculation);
-            
-            // Keep only the last 50 calculations
-            if (calculationHistory.length > 50) {
-                calculationHistory.shift();
-            }
-            
-            // Save to localStorage
-            localStorage.setItem('circuitCalculatorHistory', JSON.stringify(calculationHistory));
-        }
-        
-        // Show history
-        function showHistory() {
-            // Load from localStorage
-            const savedHistory = localStorage.getItem('circuitCalculatorHistory');
-            if (savedHistory) {
-                calculationHistory = JSON.parse(savedHistory);
-            }
-            
-            const historyContent = document.getElementById('historyContent');
-            
-            if (calculationHistory.length === 0) {
-                historyContent.innerHTML = 'No calculations saved yet.';
-                return;
-            }
-            
-            let html = '<ul>';
-            for (let i = calculationHistory.length - 1; i >= 0; i--) {
-                html += `<li>${calculationHistory[i]}</li>`;
-            }
-            html += '</ul>';
-            
-            historyContent.innerHTML = html;
-        }
-        
-        // Clear history
-        function clearHistory() {
-            if (confirm('Are you sure you want to clear all saved results?')) {
-                calculationHistory = [];
-                localStorage.removeItem('circuitCalculatorHistory');
-                document.getElementById('historyContent').innerHTML = 'No calculations saved yet.';
-            }
         }
         
         // Initialize the page
         window.onload = function() {
             showCalculator('power');
             changePowerMethod();
-            
-            // Load history if any
-            showHistory();
         };
     </script>
 </body>
